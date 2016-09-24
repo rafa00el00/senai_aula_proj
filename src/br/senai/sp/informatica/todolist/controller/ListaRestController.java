@@ -13,12 +13,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sun.jndi.toolkit.url.Uri;
+import com.sun.media.jfxmedia.Media;
 
 import br.senai.sp.informatica.todolist.DAO.ListaDao;
 import br.senai.sp.informatica.todolist.modelo.ItemLista;
@@ -30,7 +32,6 @@ public class ListaRestController {
 	@Autowired // diz para o Spring para autoInstanciar (injetar);//
 	private ListaDao listaDao;
 
-	@Transactional
 	@RequestMapping(value = "/lista", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<Lista> inserir(@RequestBody String strLista) {
 		try {
@@ -39,8 +40,7 @@ public class ListaRestController {
 			lista.setTitulo(jsonob.getString("titulo"));
 			List<ItemLista> itens = new ArrayList<ItemLista>();
 			JSONArray arrayItens = jsonob.getJSONArray("itens");
-			
-			
+
 			ItemLista it;
 			for (int i = 0; i < arrayItens.length(); i++) {
 				it = new ItemLista();
@@ -49,18 +49,39 @@ public class ListaRestController {
 				itens.add(it);
 			}
 			lista.setItens(itens);
-			
+
 			listaDao.inserir(lista);
-			URI location = new URI("/todo/" +lista.getId());
+			URI location = new URI("/todo/" + lista.getId());
 			return ResponseEntity.created(location).body(lista);
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		
-		
-		
+
+	}
+
+	@RequestMapping(value = "/lista", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public List<Lista> listar() {
+		return listaDao.listar();
+	}
+
+	@RequestMapping(value = "/lista/{id}", method = RequestMethod.DELETE)
+	public ResponseEntity<Void> excluir(@PathVariable("id") long idLista) {
+		listaDao.excluir(idLista);
+		return ResponseEntity.noContent().build();
+	}
+
+	@RequestMapping(value = "item/{idItem}", method = RequestMethod.DELETE)
+	public ResponseEntity<Void> excluirItem(@PathVariable long idItem) {
+		listaDao.excluirItem(idItem);
+		return ResponseEntity.noContent().build();
+	}
+	
+	@RequestMapping(value="/lista/{idLista}",method=RequestMethod.GET
+			,produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public Lista consultar(@PathVariable long idLista){
+		return listaDao.consultar(idLista);
 	}
 
 }
